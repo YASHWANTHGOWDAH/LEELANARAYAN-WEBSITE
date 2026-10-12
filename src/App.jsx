@@ -1,0 +1,245 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
+
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import TeacherPage from './pages/TeacherPage';
+import ClassesPage from './pages/ClassesPage';
+import AchievementsPage from './pages/AchievementsPage';
+import EventsPage from './pages/EventsPage';
+import GalleryPage from './pages/GalleryPage';
+import TestimonialsPage from './pages/TestimonialsPage';
+import ContactPage from './pages/ContactPage';
+import RegisterPage from './pages/RegisterPage';
+
+import RegistrationModal from './components/RegistrationModal';
+import LightboxModal from './components/LightboxModal';
+import AdminEditorModal from './components/AdminEditorModal';
+import AudioPlayer from './components/AudioPlayer';
+import WhatsAppButton from './components/WhatsAppButton';
+
+import { initialSiteData } from './data/siteData';
+
+export default function App() {
+  const [siteData, setSiteData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('leela_site_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...initialSiteData,
+          ...parsed,
+          artistInfo: {
+            ...initialSiteData.artistInfo,
+            ...(parsed.artistInfo || {}),
+            contact: {
+              ...initialSiteData.artistInfo.contact,
+              ...((parsed.artistInfo && parsed.artistInfo.contact) || {}),
+              email: (parsed.artistInfo?.contact?.email === "contact@leelanarayan.com" ? "itsmeleelanar@gmail.com" : (parsed.artistInfo?.contact?.email || "itsmeleelanar@gmail.com"))
+            }
+          },
+          teacherInfo: { ...initialSiteData.teacherInfo, ...(parsed.teacherInfo || {}) },
+          studentSection: { ...initialSiteData.studentSection, ...(parsed.studentSection || {}) },
+          devotionalSection: { ...initialSiteData.devotionalSection, ...(parsed.devotionalSection || {}) },
+          culturalEventsSection: { ...initialSiteData.culturalEventsSection, ...(parsed.culturalEventsSection || {}) },
+          anchoringSection: { ...initialSiteData.anchoringSection, ...(parsed.anchoringSection || {}) },
+        };
+      }
+    } catch (e) {
+      console.error("Error restoring site data:", e);
+    }
+    return initialSiteData;
+  });
+
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('leela_site_data', JSON.stringify(siteData));
+    } catch (e) {
+      console.error("Could not save to localStorage:", e);
+    }
+  }, [siteData]);
+
+  const handleOpenRegister = (courseName = '') => {
+    setSelectedCourse(courseName);
+    setIsRegisterOpen(true);
+  };
+
+  const handleSelectImage = (idx) => {
+    setLightboxIndex(idx);
+    setIsLightboxOpen(true);
+  };
+
+  const handleSaveAdminData = (newData) => {
+    setSiteData(newData);
+  };
+
+  const handleResetDefaults = () => {
+    if (window.confirm("Reset all content to default original information?")) {
+      setSiteData(initialSiteData);
+      localStorage.removeItem('leela_site_data');
+    }
+  };
+
+  const contactInfo = siteData?.artistInfo?.contact || initialSiteData.artistInfo.contact;
+
+  return (
+    <Router>
+      <ScrollToTop />
+      <div className="min-h-screen flex flex-col bg-cream-50 text-stone-800 font-sans selection:bg-gold-500 selection:text-white">
+        {/* Navigation Header */}
+        <Navbar
+          onOpenRegister={() => handleOpenRegister('')}
+          onOpenAdmin={() => setIsAdminOpen(true)}
+        />
+
+        {/* Multi-Page Routes */}
+        <main className="flex-grow">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HomePage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                  onOpenAdmin={() => setIsAdminOpen(true)}
+                  onSelectImage={handleSelectImage}
+                />
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <AboutPage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                  onOpenAdmin={() => setIsAdminOpen(true)}
+                />
+              }
+            />
+            <Route
+              path="/teacher"
+              element={
+                <TeacherPage
+                  siteData={siteData}
+                  onOpenAdmin={() => setIsAdminOpen(true)}
+                />
+              }
+            />
+            <Route
+              path="/classes"
+              element={
+                <ClassesPage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+            />
+            <Route
+              path="/achievements"
+              element={
+                <AchievementsPage
+                  siteData={siteData}
+                  onOpenAdmin={() => setIsAdminOpen(true)}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+            />
+            <Route
+              path="/events"
+              element={
+                <EventsPage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+            />
+            <Route
+              path="/gallery"
+              element={
+                <GalleryPage
+                  siteData={siteData}
+                  onSelectImage={handleSelectImage}
+                />
+              }
+            />
+            <Route
+              path="/testimonials"
+              element={
+                <TestimonialsPage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                <ContactPage
+                  siteData={siteData}
+                  onOpenRegister={handleOpenRegister}
+                />
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <RegisterPage
+                  siteData={siteData}
+                />
+              }
+            />
+          </Routes>
+        </main>
+
+        {/* Footer */}
+        <Footer
+          onOpenRegister={() => handleOpenRegister('')}
+          onOpenAdmin={() => setIsAdminOpen(true)}
+        />
+
+        {/* Registration Modal (Can be triggered from anywhere) */}
+        <RegistrationModal
+          isOpen={isRegisterOpen}
+          onClose={() => setIsRegisterOpen(false)}
+          selectedCourse={selectedCourse}
+          whatsappNumber={contactInfo?.whatsapp || "919876543210"}
+        />
+
+        {/* Lightbox Modal */}
+        <LightboxModal
+          isOpen={isLightboxOpen}
+          images={siteData?.galleryImages || initialSiteData.galleryImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setIsLightboxOpen(false)}
+          onNavigate={(idx) => setLightboxIndex(idx)}
+        />
+
+        {/* Admin Content Editor Modal */}
+        <AdminEditorModal
+          isOpen={isAdminOpen}
+          onClose={() => setIsAdminOpen(false)}
+          siteData={siteData}
+          onSave={handleSaveAdminData}
+          onReset={handleResetDefaults}
+        />
+
+        {/* Floating Background Music Player */}
+        <AudioPlayer />
+
+        {/* Floating WhatsApp Chat Button */}
+        <WhatsAppButton
+          number={contactInfo?.whatsapp || "919876543210"}
+        />
+      </div>
+    </Router>
+  );
+}
